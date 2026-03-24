@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.DS_Store
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+logs/*.log
+data/reminders_cache.json

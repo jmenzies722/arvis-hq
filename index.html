@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Arvis OS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #080808;
+      --s1:        #111111;
+      --s2:        #161616;
+      --s3:        #1c1c1c;
+      --border:    rgba(255,255,255,0.08);
+      --border-hi: rgba(255,255,255,0.14);
+      --text:      #f0f0f0;
+      --text-2:    #666;
+      --text-3:    #2e2e2e;
+      --green:     #4ade80;
+      --amber:     #facc15;
+      --red:       #f87171;
+      --blue:      #93c5fd;
+      --sidebar-w: 232px;
+      --top-h:     52px;
+      --r:         12px;
+    }
+    html { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--top-h); z-index: 200;
+      background: rgba(8,8,8,0.92); backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 16px;
+    }
+    .tb-logo {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--text); display: flex; align-items: center; justify-content:center;
+      font-size: 0.72rem; font-weight: 900; color: var(--bg);
+      letter-spacing: -0.5px; flex-shrink: 0; font-family: 'Inter', sans-serif;
+    }
+    .tb-brand { font-size: 0.85rem; font-weight: 700; letter-spacing: -0.3px; flex-shrink: 0; }
+    .tb-sep   { width: 1px; height: 18px; background: var(--border); }
+    .tb-date  { font-size: 0.75rem; color: var(--text-2); }
+    .tb-spacer { flex: 1; }
+    .tb-clock { font-size: 0.75rem; color: var(--text-2); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+    .tb-status { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--green); }
+    .tb-dot   { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 2.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Layout shell ── */
+    .shell { display: flex; padding-top: var(--top-h); min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; top: var(--top-h); left: 0; bottom: 0;
+      width: var(--sidebar-w); z-index: 100;
+      background: rgba(8,8,8,0.96); backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow-y: auto; padding: 20px 0 24px;
+    }
+    .sb-section { padding: 0 12px 4px; margin-bottom: 6px; }
+    .sb-lbl {
+      font-size: 0.57rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; color: var(--text-3); padding: 0 8px; margin-bottom: 3px;
+    }
+    .sb-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.79rem; font-weight: 500; color: var(--text-2);
+      transition: all 0.14s; border: none; background: none;
+      width: 100%; text-align: left; text-decoration: none; font-family: inherit;
+      min-height: 36px;
+    }
+    .sb-item-icon { font-size: 0; width: 20px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    /* icon shapes via CSS */
+    .icon-today::before    { content: ''; width:14px; height:14px; border:1.5px solid currentColor; border-radius:3px; display:block; }
+    .icon-agents::before   { content: ''; width:13px; height:13px; border:1.5px solid currentColor; border-radius:50%; display:block; }
+    .icon-activity::before { content: ''; display:block; width:13px; height:2px; background:currentColor; box-shadow:0 4px 0 currentColor, 0 8px 0 currentColor; }
+    .icon-log::before      { content: ''; display:block; width:2px; height:13px; background:currentColor; box-shadow:4px 0 0 currentColor, 8px -4px 0 currentColor; }
+    .icon-startup::before  { content: ''; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:12px solid currentColor; display:block; }
+    .icon-workout::before  { content: ''; display:block; width:14px; height:6px; border:1.5px solid currentColor; border-radius:999px; }
+    .icon-audit::before    { content: ''; display:block; width:11px; height:11px; border:1.5px solid currentColor; border-radius:2px; box-shadow:4px -4px 0 -1px currentColor, 4px -4px 0 0.5px currentColor; }
+    .icon-memory::before   { content: ''; display:block; width:12px; height:14px; border:1.5px solid currentColor; border-radius:2px 2px 0 0; box-shadow:0 6px 0 -4px currentColor, 0 10px 0 -4px currentColor; }
+    .sb-item:hover { background: var(--s2); color: var(--text); }
+    .sb-item.active { background: var(--s2); color: var(--text); border: 1px solid var(--border); }
+    .sb-divider { height: 1px; background: var(--border); margin: 10px 20px; }
+    .sb-spacer  { flex: 1; }
+    .sb-foot { padding: 14px 20px 0; border-top: 1px solid var(--border); margin-top: 10px; }
+    .sb-live { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 600; color: var(--green); }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; padding: 32px 36px 80px; }
+
+    /* ── Pages ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── TODAY PAGE ── */
+    .today-greeting {
+      font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -1.2px;
+      margin-bottom: 6px; line-height: 1.1;
+    }
+    .today-date { font-size: 0.82rem; color: var(--text-2); margin-bottom: 28px; }
+
+    .today-strip {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 32px;
+    }
+    .ts-card {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 18px;
+      transition: border-color 0.16s;
+    }
+    .ts-card:hover { border-color: var(--border-hi); }
+    .ts-val  { font-size: 1.8rem; font-weight: 900; letter-spacing: -1.2px; color: var(--text); line-height: 1; }
+    .ts-lbl  { font-size: 0.59rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); margin-top: 6px; }
+
+    .today-row-hd {
+      font-size: 0.59rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.13em; color: var(--text-3); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .today-row-hd::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .automation-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
+    .auto-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.76rem; font-weight: 500;
+      transition: border-color 0.16s;
+    }
+    .auto-chip.done   { border-color: rgba(74,222,128,0.18); }
+    .auto-chip.next   { border-color: rgba(255,255,255,0.1); }
+    .auto-chip.cloud  { border-color: rgba(147,197,253,0.14); }
+    .chip-status {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cs-done  { background: var(--green); }
+    .cs-next  { background: var(--text-3); }
+    .cs-live  { background: var(--blue); animation: blink 2s ease-in-out infinite; }
+    .chip-name  { font-weight: 600; color: var(--text); }
+    .chip-sched { font-size: 0.68rem; color: var(--text-2); margin-left: 2px; }
+
+    .quick-actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 8px; }
+    .qa-btn {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 18px; cursor: pointer;
+      font-family: inherit; text-align: left; transition: all 0.16s; color: var(--text);
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .qa-btn:hover { background: var(--s2); border-color: var(--border-hi); transform: translateY(-1px); }
+    .qa-btn:active { transform: scale(0.98); }
+    .qa-title { font-size: 0.82rem; font-weight: 600; }
+    .qa-sub   { font-size: 0.68rem; color: var(--text-2); }
+
+    /* ── AGENTS PAGE ── */
+    .page-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .page-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+    .filter-tabs { display: flex; gap: 2px; background: var(--s1); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+    .ftab { padding: 6px 14px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; cursor: pointer; color: var(--text-2); border: none; background: transparent; font-family: inherit; transition: all 0.14s; }
+    .ftab.active { background: var(--s3); color: var(--text); border: 1px solid var(--border); }
+    .ftab:hover:not(.active) { color: var(--text); }
+
+    .sec-label {
+      grid-column: 1/-1; font-size: 0.57rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; color: var(--text-3); margin-top: 8px; margin-bottom: 2px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sec-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 10px; }
+
+    .agent-card {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px; position: relative; overflow: hidden;
+      transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+    }
+    .agent-card:hover { border-color: var(--border-hi); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+
+    /* progress shimmer when running */
+    .agent-card .shimmer-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: transparent; overflow: hidden;
+    }
+    .agent-card.running .shimmer-bar { background: rgba(255,255,255,0.07); }
+    .agent-card.running .shimmer-bar::after {
+      content: '';
+      position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
+    @keyframes shimmer { 100% { left: 120%; } }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 13px; }
+    .card-mono {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: var(--s3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.64rem; font-weight: 800; letter-spacing: 0.06em;
+      color: var(--text-2); font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    }
+    .card-badge {
+      font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 3px 7px; border-radius: 999px;
+    }
+    .b-local   { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
+    .b-cloud   { background: rgba(147,197,253,0.07); color: var(--blue); border: 1px solid rgba(147,197,253,0.18); }
+    .b-pending { background: transparent; color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+    .card-name { font-size: 0.88rem; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 5px; }
+    .card-desc { font-size: 0.72rem; color: var(--text-2); line-height: 1.56; margin-bottom: 12px; }
+    .card-sched {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.63rem; color: var(--text-3);
+      border: 1px solid var(--border); padding: 3px 8px; border-radius: 5px; margin-bottom: 14px;
+    }
+    .card-actions { display: flex; gap: 7px; }
+    .btn-run {
+      flex: 1; padding: 9px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: var(--s3); color: var(--text-2);
+      font-family: inherit; transition: all 0.15s; min-height: 38px;
+    }
+    .btn-run:hover:not(:disabled) { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .btn-run:active:not(:disabled) { transform: scale(0.97); }
+    .btn-run:disabled { opacity: 0.25; cursor: not-allowed; }
+    .btn-run.running { background: var(--s3); color: var(--text-2); border-color: var(--border); cursor: wait; }
+    .btn-open {
+      padding: 9px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-2);
+      text-decoration: none; display: flex; align-items: center; transition: all 0.15s;
+      font-family: inherit; min-height: 38px;
+    }
+    .btn-open:hover { background: var(--s2); color: var(--text); border-color: var(--border-hi); }
+
+    /* ── ACTIVITY PAGE ── */
+    .activity-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .activity-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: 9px; background: var(--s1);
+      border: 1px solid transparent; transition: border-color 0.14s;
+    }
+    .activity-row:hover { border-color: var(--border); }
+    .act-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .ai-ok  { background: var(--green); }
+    .ai-err { background: var(--red); }
+    .ai-run { background: var(--amber); animation: blink 1s ease-in-out infinite; }
+    .act-agent { font-size: 0.78rem; font-weight: 600; min-width: 140px; }
+    .act-summary { font-size: 0.73rem; color: var(--text-2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .act-time { font-size: 0.65rem; color: var(--text-3); white-space: nowrap; }
+    .act-status { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+    .as-ok  { color: var(--green); background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.16); }
+    .as-err { color: var(--red);   background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.16); }
+    .as-run { color: var(--amber); background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.16); }
+
+    .perf-table { width: 100%; border-collapse: collapse; }
+    .perf-table th { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-3); padding: 0 0 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    .perf-table th:last-child { text-align: right; }
+    .perf-table td { padding: 10px 0; font-size: 0.76rem; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+    .perf-table tr:last-child td { border-bottom: none; }
+    .perf-rate { font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; float: right; }
+    .pr-ok  { color: var(--green); background: rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.16); }
+    .pr-err { color: var(--red);   background: rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.16); }
+
+    /* ── MEMORY PAGE ── */
+    .mem-filters { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .mem-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+    .mem-card {
+      background:var(--s1); border:1px solid var(--border); border-radius:var(--r);
+      padding:18px 20px; cursor:pointer; transition:border-color 0.16s, transform 0.16s;
+      position:relative;
+    }
+    .mem-card:hover { border-color:var(--border-hi); transform:translateY(-2px); }
+    .mem-card-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .mem-type-badge {
+      font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;
+      padding:3px 8px; border-radius:999px;
+    }
+    .mt-user      { background:rgba(147,197,253,0.1); color:#93c5fd; border:1px solid rgba(147,197,253,0.2); }
+    .mt-feedback  { background:rgba(250,204,21,0.1);  color:#fbbf24; border:1px solid rgba(250,204,21,0.2); }
+    .mt-project   { background:rgba(74,222,128,0.1);  color:#4ade80; border:1px solid rgba(74,222,128,0.2); }
+    .mt-reference { background:rgba(192,132,252,0.1); color:#c084fc; border:1px solid rgba(192,132,252,0.2); }
+    .mem-updated { font-size:0.62rem; color:var(--text-3); margin-left:auto; }
+    .mem-name { font-size:0.95rem; font-weight:700; margin-bottom:5px; }
+    .mem-desc { font-size:0.75rem; color:var(--text-2); line-height:1.5; margin-bottom:12px; }
+    .mem-body {
+      font-size:0.72rem; color:var(--text-2); line-height:1.6;
+      max-height:80px; overflow:hidden; position:relative;
+      white-space:pre-wrap;
+    }
+    .mem-body::after {
+      content:''; position:absolute; bottom:0; left:0; right:0; height:28px;
+      background:linear-gradient(transparent, var(--s1));
+    }
+    .mem-actions { display:flex; gap:6px; margin-top:12px; }
+    .mem-btn { font-size:0.68rem; font-weight:600; padding:5px 10px; border-radius:6px; cursor:pointer; border:1px solid var(--border); background:var(--s2); color:var(--text-2); font-family:inherit; transition:all 0.14s; }
+    .mem-btn:hover { color:var(--text); border-color:var(--border-hi); }
+    .mem-btn.del:hover { background:rgba(248,113,113,0.1); color:var(--red); border-color:rgba(248,113,113,0.3); }
+
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--s1); border:1px solid var(--border-hi); border-radius:16px; width:100%; max-width:560px; }
+    .modal-hd { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); }
+    .modal-title { font-size:1rem; font-weight:800; }
+    .modal-close { background:none; border:none; color:var(--text-2); font-size:1.4rem; cursor:pointer; line-height:1; }
+    .modal-body { padding:20px; }
+    .modal-foot { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+
+    /* ── LOG PAGE ── */
+    .log-section { margin-bottom: 32px; }
+    .log-section-title { font-size: 0.59rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--text-3); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .log-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .log-card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+    .log-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .log-row:last-child { margin-bottom: 0; }
+    .log-input {
+      flex: 1; min-width: 110px; padding: 10px 13px; border-radius: 8px;
+      background: var(--s3); border: 1px solid var(--border);
+      color: var(--text); font-size: 0.8rem; font-family: inherit; outline: none;
+      transition: border-color 0.14s; min-height: 42px;
+    }
+    .log-input:focus { border-color: var(--border-hi); }
+    .log-input::placeholder { color: var(--text-3); }
+    .log-btn {
+      padding: 10px 18px; border-radius: 8px; font-size: 0.76rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border-hi); background: var(--text); color: var(--bg);
+      font-family: inherit; transition: all 0.15s; min-height: 42px; white-space: nowrap;
+    }
+    .log-btn:hover { opacity: 0.88; }
+    .log-btn:active { transform: scale(0.97); }
+    .log-btn-ghost {
+      padding: 10px 18px; border-radius: 8px; font-size: 0.76rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-2);
+      font-family: inherit; transition: all 0.15s; min-height: 42px; white-space: nowrap;
+    }
+    .log-btn-ghost:hover { background: var(--s3); color: var(--text); border-color: var(--border-hi); }
+    .log-toggle { display: flex; gap: 6px; align-items: center; }
+    .log-toggle-label { font-size: 0.78rem; font-weight: 500; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 7px; }
+    .log-toggle-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--text); cursor: pointer; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(16px);
+      background: rgba(8,8,8,0.97); border: 1px solid var(--border-hi);
+      backdrop-filter: blur(20px); padding: 10px 20px; border-radius: 10px;
+      font-size: 0.79rem; font-weight: 500; opacity: 0; z-index: 999; pointer-events: none;
+      transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .empty-state { color: var(--text-3); font-size: 0.78rem; padding: 40px; text-align: center; }
+
+    /* ── MOBILE BOTTOM NAV ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(8,8,8,0.96); backdrop-filter: blur(28px);
+      border-top: 1px solid var(--border);
+      padding: 10px 8px max(10px, env(safe-area-inset-bottom));
+      align-items: center; justify-content: space-around;
+    }
+    .mn-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: 9px; cursor: pointer;
+      font-size: 0.59rem; font-weight: 600; color: var(--text-2);
+      text-decoration: none; transition: all 0.14s; min-width: 54px; min-height: 48px;
+      justify-content: center; border: none; background: none; font-family: inherit;
+    }
+    .mn-icon { font-size: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .mn-icon::before { content: ''; display: block; }
+    .mn-i1::before { width:15px; height:15px; border:1.5px solid currentColor; border-radius:3px; }
+    .mn-i2::before { width:14px; height:14px; border:1.5px solid currentColor; border-radius:50%; }
+    .mn-i3::before { width:14px; height:2px; background:currentColor; box-shadow:0 4px 0 currentColor, 0 8px 0 currentColor; }
+    .mn-i4::before { width:2px; height:14px; background:currentColor; box-shadow:4px -4px 0 currentColor; }
+    .mn-i5::before { width:12px; height:12px; border:1.5px solid currentColor; border-radius:2px; box-shadow:4px -4px 0 -1px currentColor, 4px -4px 0 0.5px currentColor; }
+    .mn-i6::before { width:11px; height:13px; border:1.5px solid currentColor; border-radius:2px 2px 0 0; box-shadow:0 5px 0 -4px currentColor, 0 9px 0 -4px currentColor; }
+    .mn-item.active { color: var(--text); background: var(--s2); }
+    .mn-item:active { transform: scale(0.92); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 800px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px 16px 90px; }
+      .topbar { padding: 0 16px; }
+      .tb-date, .tb-sep { display: none; }
+      .today-strip { grid-template-columns: repeat(3, 1fr); }
+      .today-strip .ts-card:nth-child(4), .today-strip .ts-card:nth-child(5) { display: none; }
+      .agents-grid { grid-template-columns: 1fr; }
+      .quick-actions-grid { grid-template-columns: 1fr 1fr; }
+      .mobile-nav { display: flex; }
+      .log-row { flex-direction: column; }
+      .log-input, .log-btn, .log-btn-ghost { width: 100%; }
+    }
+    @media (max-width: 480px) {
+      .automation-strip { flex-direction: column; }
+      .quick-actions-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── CHARTS PAGE ── */
+    .icon-charts::before { content:''; display:block; width:13px; height:9px; background:currentColor; clip-path:polygon(0 100%,0 0,23% 0,23% 100%,38% 100%,38% 40%,62% 40%,62% 100%,77% 100%,77% 65%,100% 65%,100% 100%); }
+    .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .chart-card { background:var(--s1); border:1px solid var(--border); border-radius:var(--r); padding:20px; }
+    .chart-title { font-size:0.59rem; font-weight:700; text-transform:uppercase; letter-spacing:0.13em; color:var(--text-3); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .chart-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    canvas.bar-chart { width:100%; display:block; }
+    .goal-row { margin-bottom:14px; }
+    .goal-row:last-child { margin-bottom:0; }
+    .goal-label { display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:6px; }
+    .goal-name { font-weight:600; color:var(--text); }
+    .goal-pct { color:var(--text-2); font-variant-numeric:tabular-nums; }
+    .goal-track { height:5px; background:var(--s3); border-radius:999px; overflow:hidden; }
+    .goal-fill { height:100%; border-radius:999px; background:var(--green); transition:width 0.7s cubic-bezier(0.4,0,0.2,1); }
+    .goal-sub { font-size:0.63rem; color:var(--text-3); margin-top:5px; }
+    .nw-total { font-size:2rem; font-weight:900; letter-spacing:-1.4px; margin-bottom:4px; color:var(--text); }
+    .nw-lbl { font-size:0.59rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-3); }
+    @media (max-width:800px) { .charts-grid { grid-template-columns:1fr; } }
+
+    /* ── COMMAND CENTER PAGE ── */
+    .cmd-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+    @media (max-width: 960px) { .cmd-layout { grid-template-columns: 1fr; } }
+
+    /* Status bar */
+    .cmd-status-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--s1); border: 1px solid var(--border);
+      font-size: 0.72rem; font-weight: 600; margin-bottom: 16px;
+      width: fit-content;
+    }
+    .cmd-live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .cmd-live-dot.connected { animation: blink 1.6s ease-in-out infinite; }
+    .cmd-live-dot.offline   { background: var(--red); animation: none; }
+    .cmd-live-label { color: var(--green); }
+    .cmd-live-label.offline { color: var(--red); }
+
+    /* Metrics strip */
+    .cmd-metrics {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .cmd-metric {
+      background: var(--s1); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; min-width: 110px; transition: border-color 0.2s;
+    }
+    .cmd-metric.updated { border-color: rgba(74,222,128,0.35); }
+    .cmd-metric-val { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.8px; color: var(--text); line-height: 1; }
+    .cmd-metric-lbl { font-size: 0.57rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); margin-top: 5px; }
+
+    /* Terminal feed */
+    .cmd-terminal {
+      background: var(--s1); border: 1px solid var(--border); border-radius: var(--r);
+      overflow: hidden;
+    }
+    .cmd-terminal-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3);
+    }
+    .cmd-feed {
+      height: 480px; overflow-y: auto; padding: 12px 0;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.75rem;
+      scroll-behavior: smooth;
+    }
+    .cmd-feed::-webkit-scrollbar { width: 4px; }
+    .cmd-feed::-webkit-scrollbar-track { background: transparent; }
+    .cmd-feed::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 2px; }
+
+    .cmd-entry {
+      display: flex; align-items: baseline; gap: 10px;
+      padding: 5px 16px; line-height: 1.5;
+      animation: slideInLeft 0.22s ease-out;
+      transition: background 0.14s;
+    }
+    .cmd-entry:hover { background: rgba(255,255,255,0.025); }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .cmd-ts   { font-size: 0.63rem; color: var(--text-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .cmd-icon { flex-shrink: 0; width: 18px; text-align: center; }
+    .cmd-text { flex: 1; word-break: break-word; }
+
+    /* Color coding */
+    .cmd-entry.type-telegram_in  .cmd-text { color: #4ade80; }
+    .cmd-entry.type-telegram_out .cmd-text { color: #93c5fd; }
+    .cmd-entry.type-agent_run    .cmd-text { color: #facc15; }
+    .cmd-entry.type-agent_done   .cmd-text { color: var(--text); }
+    .cmd-entry.type-metric_update .cmd-text { color: #c084fc; }
+    .cmd-entry.type-heartbeat    .cmd-text { color: var(--text-3); font-size: 0.63rem; }
+    .cmd-entry.type-connected    .cmd-text { color: #4ade80; font-size: 0.63rem; }
+
+    /* Sidebar info panel */
+    .cmd-info { display: flex; flex-direction: column; gap: 16px; }
+    .cmd-info-card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; }
+    .cmd-info-title { font-size: 0.57rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-3); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .cmd-info-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .cmd-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.75rem; }
+    .cmd-stat-row:last-child { border-bottom: none; }
+    .cmd-stat-key { color: var(--text-2); }
+    .cmd-stat-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+
+    /* Mobile charts bars icon */
+    .mn-i7::before { width:12px; height:9px; background:currentColor; clip-path:polygon(0 100%,0 0,23% 0,23% 100%,38% 100%,38% 40%,62% 40%,62% 100%,77% 100%,77% 65%,100% 65%,100% 100%); display:block; content:''; }
+    /* Mobile command/terminal icon */
+    .mn-i8::before { content:''; display:block; width:13px; height:9px; border:1.5px solid currentColor; border-radius:2px; position:relative; }
+    .mn-i8::after  { content:''; display:block; width:5px; height:1.5px; background:currentColor; position:absolute; top:50%; left:calc(50% - 1px); transform:translate(-50%,-50%) rotate(-45deg) translateX(-2px); box-shadow:3px 3px 0 currentColor; }
+
+    /* ── SIDEBAR SECTION LABELS ── */
+    .sb-lbl-new { font-size:0.54rem; font-weight:700; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-3); padding:0 18px; margin:14px 0 3px; }
+
+    /* Command icon */
+    .icon-command::before { content:''; display:block; width:10px; height:7px; border:1.5px solid currentColor; border-radius:2px; box-shadow:2px 3px 0 -0.5px currentColor; }
+
+    /* ── TODAY STATUS ROW ── */
+    .status-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; }
+    .status-pill {
+      display:flex; align-items:center; gap:6px;
+      background:var(--s1); border:1px solid var(--border);
+      border-radius:8px; padding:8px 12px;
+      font-size:0.76rem; font-weight:500; color:var(--text-2);
+      transition:border-color 0.14s;
+    }
+    .status-pill.ok   { border-color:rgba(74,222,128,0.22); color:var(--text); }
+    .status-pill.warn { border-color:rgba(250,204,21,0.2); }
+    .status-pill.none { opacity:0.55; }
+    .sp-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; background:var(--text-3); }
+    .sp-dot.ok   { background:var(--green); }
+    .sp-dot.warn { background:var(--amber); }
+
+    /* ── AUTOMATION CHIPS UPDATED ── */
+    .auto-chip.past   { border-color:rgba(74,222,128,0.2); }
+    .auto-chip.future { border-color:rgba(255,255,255,0.06); opacity:0.7; }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="tb-logo">OS</div>
+  <div class="tb-brand">Arvis</div>
+  <div class="tb-sep"></div>
+  <div class="tb-date" id="tbDate"></div>
+  <div class="tb-spacer"></div>
+  <div class="tb-clock" id="tbClock"></div>
+  <div class="tb-sep"></div>
+  <div class="tb-status"><div class="tb-dot"></div><span id="tbActive">...</span> active</div>
+</header>
+
+<div class="shell">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sb-section">
+    <div class="sb-lbl-new">Daily</div>
+    <button class="sb-item active" data-page="today" onclick="nav('today',this)">
+      <span class="sb-item-icon icon-today"></span> Today
+    </button>
+    <button class="sb-item" data-page="command" onclick="nav('command',this)">
+      <span class="sb-item-icon icon-command"></span> Command
+    </button>
+    <button class="sb-item" data-page="charts" onclick="nav('charts',this)">
+      <span class="sb-item-icon icon-charts"></span> Charts
+    </button>
+    <button class="sb-item" data-page="log" onclick="nav('log',this)">
+      <span class="sb-item-icon icon-log"></span> Log
+    </button>
+    <div class="sb-lbl-new" style="margin-top:16px">Manage</div>
+    <button class="sb-item" data-page="agents" onclick="nav('agents',this)">
+      <span class="sb-item-icon icon-agents"></span> Agents
+    </button>
+    <button class="sb-item" data-page="activity" onclick="nav('activity',this)">
+      <span class="sb-item-icon icon-activity"></span> Activity
+    </button>
+    <div class="sb-lbl-new" style="margin-top:16px">Tools</div>
+    <button class="sb-item" data-page="audit" onclick="nav('audit',this)">
+      <span class="sb-item-icon icon-audit"></span> Audit
+    </button>
+    <button class="sb-item" data-page="memory" onclick="nav('memory',this)">
+      <span class="sb-item-icon icon-memory"></span> Memory
+    </button>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-section">
+    <div class="sb-lbl">Dashboards</div>
+    <a class="sb-item" href="http://192.168.1.178:8768" target="_blank">
+      <span class="sb-item-icon icon-startup"></span> Startup HQ
+    </a>
+    <a class="sb-item" href="http://192.168.1.178:8765" target="_blank">
+      <span class="sb-item-icon icon-workout"></span> Workout
+    </a>
+  </div>
+  <div class="sb-spacer"></div>
+  <div class="sb-foot">
+    <div class="sb-live"><div class="tb-dot"></div><span id="sbActive">...</span> agents live</div>
+    <div style="font-size:0.67rem;color:var(--text-3);margin-top:5px;font-variant-numeric:tabular-nums" id="sbClock"></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- TODAY -->
+  <section class="page active" id="page-today">
+    <div class="today-greeting" id="todayGreeting">Good evening, Josh.</div>
+    <div class="today-date" id="todayDateFull"></div>
+
+    <div class="today-strip">
+      <div class="ts-card"><div class="ts-val" id="td-agents">—</div><div class="ts-lbl">Agents Live</div></div>
+      <div class="ts-card"><div class="ts-val" id="td-pushups">—</div><div class="ts-lbl">Push-Ups</div></div>
+      <div class="ts-card"><div class="ts-val" id="td-focus">—</div><div class="ts-lbl">Focus Min</div></div>
+      <div class="ts-card"><div class="ts-val" id="td-spent">—</div><div class="ts-lbl">Spent Today</div></div>
+      <div class="ts-card"><div class="ts-val" id="td-streak">—</div><div class="ts-lbl">Day Streak</div></div>
+    </div>
+
+    <div class="today-row-hd">Today's status</div>
+    <div class="status-row" id="todayStatusRow">
+      <div class="status-pill none"><div class="sp-dot"></div>Loading...</div>
+    </div>
+
+    <div class="today-row-hd">Financial snapshot</div>
+    <div id="savingsSnapshot" style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:32px"><div style="color:var(--text-3);font-size:0.78rem;padding:8px 0">Loading...</div></div>
+
+    <div class="today-row-hd">Automations</div>
+    <div class="automation-strip" id="automationStrip"></div>
+
+    <div class="today-row-hd">Open tasks</div>
+    <div id="openTasksList" style="margin-bottom:32px;display:flex;flex-direction:column;gap:6px">
+      <div style="color:var(--text-3);font-size:0.78rem;padding:8px 0">Loading...</div>
+    </div>
+
+    <div class="today-row-hd">Quick actions</div>
+    <div class="quick-actions-grid">
+      <button class="qa-btn" onclick="quickFocus()"><div class="qa-title">Focus Session</div><div class="qa-sub">Log a deep work block</div></button>
+      <button class="qa-btn" onclick="nav('log', document.querySelector('[data-page=log]')); setTimeout(()=>document.getElementById('wReps')?.focus(),300)"><div class="qa-title">Log Push-Ups</div><div class="qa-sub">Morning or evening set</div></button>
+      <button class="qa-btn" onclick="quickHabit()"><div class="qa-title">Habit Check-In</div><div class="qa-sub">Sleep, water, gym</div></button>
+      <button class="qa-btn" onclick="nav('log', document.querySelector('[data-page=log]')); setTimeout(()=>document.getElementById('eAmt')?.focus(),300)"><div class="qa-title">Log Expense</div><div class="qa-sub">Auto-categorized</div></button>
+      <button class="qa-btn" onclick="runAgentById('standup')"><div class="qa-title">Run Standup</div><div class="qa-sub">From recent git commits</div></button>
+      <button class="qa-btn" onclick="quickWin()"><div class="qa-title">Log a Win</div><div class="qa-sub">For salary &amp; LinkedIn</div></button>
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="page" id="page-agents">
+    <div class="page-hd">
+      <div class="page-title">Agents</div>
+      <div class="filter-tabs">
+        <button class="ftab active" onclick="filterAgents('all',this)">All</button>
+        <button class="ftab" onclick="filterAgents('life',this)">Life</button>
+        <button class="ftab" onclick="filterAgents('work',this)">Work</button>
+        <button class="ftab" onclick="filterAgents('income',this)">Income</button>
+      </div>
+    </div>
+    <div class="agents-grid" id="agentsGrid"></div>
+  </section>
+
+  <!-- ACTIVITY -->
+  <section class="page" id="page-activity">
+    <div class="page-hd">
+      <div class="page-title">Activity</div>
+      <div style="font-size:0.75rem;color:var(--text-2)"><span id="totalRuns">0</span> total runs</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px">
+      <div>
+        <div style="font-size:0.59rem;font-weight:700;text-transform:uppercase;letter-spacing:0.13em;color:var(--text-3);margin-bottom:12px;display:flex;align-items:center;gap:10px">Live feed <div class="tb-dot" style="margin-left:auto"></div></div>
+        <div id="actFeed" class="activity-wrap"></div>
+      </div>
+      <div>
+        <div style="font-size:0.59rem;font-weight:700;text-transform:uppercase;letter-spacing:0.13em;color:var(--text-3);margin-bottom:12px">Performance</div>
+        <table class="perf-table" id="perfTable"><thead><tr><th>Agent</th><th>Runs</th><th>Avg</th><th>Rate</th></tr></thead><tbody id="perfBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section class="page" id="page-log">
+    <div class="page-hd"><div class="page-title">Quick Log</div></div>
+
+    <div class="log-section">
+      <div class="log-section-title">Push-Ups</div>
+      <div class="log-card">
+        <div class="log-row">
+          <input class="log-input" id="wSets" type="number" inputmode="numeric" placeholder="Sets" value="1" style="max-width:100px">
+          <input class="log-input" id="wReps" type="number" inputmode="numeric" placeholder="Reps" value="50" style="max-width:100px">
+          <select class="log-input" id="wSess" style="cursor:pointer;max-width:160px">
+            <option value="morning">Morning</option>
+            <option value="evening" selected>Evening</option>
+            <option value="manual">Manual</option>
+          </select>
+          <button class="log-btn" onclick="logWorkout()">Log Push-Ups</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Expense</div>
+      <div class="log-card">
+        <div class="log-row">
+          <input class="log-input" id="eAmt" type="number" inputmode="decimal" placeholder="Amount ($)">
+          <input class="log-input" id="eNote" type="text" placeholder="What did you spend on?">
+          <button class="log-btn" onclick="logExpense()">Log Expense</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Focus Session</div>
+      <div class="log-card">
+        <div class="log-row">
+          <input class="log-input" id="fMin" type="number" inputmode="numeric" placeholder="Duration (min)" value="25" style="max-width:170px">
+          <input class="log-input" id="fGoal" type="text" placeholder="What did you work on?">
+          <button class="log-btn" onclick="logFocus()">Log Focus</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Habit Check-In</div>
+      <div class="log-card">
+        <div class="log-row">
+          <input class="log-input" id="hSleep" type="number" inputmode="decimal" placeholder="Sleep (hrs)" style="max-width:140px">
+          <input class="log-input" id="hWater" type="number" inputmode="numeric" placeholder="Water (glasses)" style="max-width:160px">
+          <input class="log-input" id="hReading" type="number" inputmode="numeric" placeholder="Reading (min)" style="max-width:155px">
+        </div>
+        <div class="log-row">
+          <label class="log-toggle-label"><input type="checkbox" id="hGym"> Gym today</label>
+          <label class="log-toggle-label"><input type="checkbox" id="hPhone"> Phone-free morning</label>
+          <button class="log-btn" onclick="logHabit()">Log Habits</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Body Metrics</div>
+      <div class="log-card">
+        <div class="log-row">
+          <input class="log-input" id="bWeight" type="number" inputmode="decimal" placeholder="Weight (lbs)">
+          <input class="log-input" id="bMood" type="number" inputmode="numeric" placeholder="Mood (1–5)" min="1" max="5">
+          <input class="log-input" id="bEnergy" type="number" inputmode="numeric" placeholder="Energy (1–5)" min="1" max="5">
+          <button class="log-btn" onclick="logBody()">Log Body</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Savings Update</div>
+      <div class="log-card">
+        <div class="log-row">
+          <select class="log-input" id="savAcct" style="cursor:pointer;max-width:180px">
+            <option value="sofi">SoFi (goal $7K)</option>
+            <option value="roth">Roth IRA (goal $7K)</option>
+            <option value="fxaix">FXAIX (goal $50K)</option>
+          </select>
+          <input class="log-input" id="savAmt" type="number" inputmode="decimal" placeholder="New balance ($)">
+          <button class="log-btn" onclick="logSavings()">Update Savings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">Win Log</div>
+      <div class="log-card">
+        <div class="log-row">
+          <select class="log-input" id="winCat" style="cursor:pointer;max-width:180px">
+            <option value="career">Career</option>
+            <option value="technical">Technical</option>
+            <option value="leadership">Leadership</option>
+            <option value="financial">Financial</option>
+            <option value="personal">Personal</option>
+          </select>
+          <input class="log-input" id="winDesc" type="text" placeholder="Describe the win (for salary talks, LinkedIn)">
+          <button class="log-btn" onclick="logWin()">Log Win</button>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- AUDIT -->
+  <section class="page" id="page-audit">
+    <div class="page-hd">
+      <div class="page-title">Agent Audit</div>
+      <button class="btn-ghost" onclick="loadAudit()">↻ Refresh</button>
+    </div>
+    <div id="auditGrid"></div>
+  </section>
+
+  <!-- MEMORY -->
+  <section class="page" id="page-memory">
+    <div class="page-hd">
+      <div class="page-title">Memory</div>
+      <button class="btn-ghost" onclick="openMemoryModal()">+ Add Memory</button>
+    </div>
+
+    <div class="mem-filters" id="memFilters">
+      <button class="ftab active" onclick="filterMemory('all',this)">All</button>
+      <button class="ftab" onclick="filterMemory('user',this)">User</button>
+      <button class="ftab" onclick="filterMemory('feedback',this)">Feedback</button>
+      <button class="ftab" onclick="filterMemory('project',this)">Project</button>
+      <button class="ftab" onclick="filterMemory('reference',this)">Reference</button>
+    </div>
+
+    <div id="memGrid" class="mem-grid"></div>
+  </section>
+
+  <!-- CHARTS -->
+  <section class="page" id="page-charts">
+    <div class="page-hd">
+      <div class="page-title">Charts</div>
+      <div style="font-size:0.72rem;color:var(--text-2)" id="chartsLastUpdate"></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Push-Ups — 7 days</div>
+        <canvas id="chartPushups" class="bar-chart" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Agent Runs — 7 days</div>
+        <canvas id="chartAgentRuns" class="bar-chart" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Savings Goals</div>
+        <div id="savingsGoals"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Net Worth Tracked</div>
+        <div class="nw-total" id="nwTotal">—</div>
+        <div class="nw-lbl">Total across all accounts</div>
+        <div id="nwBreakdown" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMAND CENTER -->
+  <section class="page" id="page-command">
+    <div class="page-hd">
+      <div class="page-title">Command Center</div>
+      <div class="cmd-status-bar">
+        <div class="cmd-live-dot offline" id="cmdDot"></div>
+        <span class="cmd-live-label offline" id="cmdStatus">OFFLINE</span>
+      </div>
+    </div>
+
+    <!-- Live metrics strip -->
+    <div class="cmd-metrics">
+      <div class="cmd-metric" id="cm-pushups">
+        <div class="cmd-metric-val" id="cm-pushups-val">—</div>
+        <div class="cmd-metric-lbl">Push-Ups Today</div>
+      </div>
+      <div class="cmd-metric" id="cm-focus">
+        <div class="cmd-metric-val" id="cm-focus-val">—</div>
+        <div class="cmd-metric-lbl">Focus Min</div>
+      </div>
+      <div class="cmd-metric" id="cm-streak">
+        <div class="cmd-metric-val" id="cm-streak-val">—</div>
+        <div class="cmd-metric-lbl">Day Streak</div>
+      </div>
+      <div class="cmd-metric" id="cm-agents">
+        <div class="cmd-metric-val" id="cm-agents-val">—</div>
+        <div class="cmd-metric-lbl">Agents Live</div>
+      </div>
+      <div class="cmd-metric" id="cm-events">
+        <div class="cmd-metric-val" id="cm-events-val">0</div>
+        <div class="cmd-metric-lbl">Events Today</div>
+      </div>
+    </div>
+
+    <div class="cmd-layout">
+      <!-- Terminal feed -->
+      <div class="cmd-terminal">
+        <div class="cmd-terminal-hd">
+          <span>Live Feed</span>
+          <button onclick="clearCmdFeed()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:0.63rem;font-family:inherit;font-weight:600">Clear</button>
+        </div>
+        <div class="cmd-feed" id="cmdFeed">
+          <div class="cmd-entry type-connected">
+            <span class="cmd-ts">—</span>
+            <span class="cmd-icon">◎</span>
+            <span class="cmd-text">Connecting to Arvis stream...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info panel -->
+      <div class="cmd-info">
+        <div class="cmd-info-card">
+          <div class="cmd-info-title">Stream Stats</div>
+          <div class="cmd-stat-row"><span class="cmd-stat-key">Status</span><span class="cmd-stat-val" id="cis-status">Offline</span></div>
+          <div class="cmd-stat-row"><span class="cmd-stat-key">Connected</span><span class="cmd-stat-val" id="cis-connected">—</span></div>
+          <div class="cmd-stat-row"><span class="cmd-stat-key">Events received</span><span class="cmd-stat-val" id="cis-events">0</span></div>
+          <div class="cmd-stat-row"><span class="cmd-stat-key">Last heartbeat</span><span class="cmd-stat-val" id="cis-heartbeat">—</span></div>
+          <div class="cmd-stat-row"><span class="cmd-stat-key">Reconnects</span><span class="cmd-stat-val" id="cis-reconnects">0</span></div>
+        </div>
+        <div class="cmd-info-card">
+          <div class="cmd-info-title">Event Legend</div>
+          <div class="cmd-stat-row">
+            <span class="cmd-stat-key" style="color:#4ade80">📨 Telegram In</span>
+            <span class="cmd-stat-val" style="font-size:0.63rem;color:var(--text-3)">incoming msg</span>
+          </div>
+          <div class="cmd-stat-row">
+            <span class="cmd-stat-key" style="color:#93c5fd">📤 Telegram Out</span>
+            <span class="cmd-stat-val" style="font-size:0.63rem;color:var(--text-3)">arvis reply</span>
+          </div>
+          <div class="cmd-stat-row">
+            <span class="cmd-stat-key" style="color:#facc15">⚡ Agent Run</span>
+            <span class="cmd-stat-val" style="font-size:0.63rem;color:var(--text-3)">triggered</span>
+          </div>
+          <div class="cmd-stat-row">
+            <span class="cmd-stat-key">✓ Agent Done</span>
+            <span class="cmd-stat-val" style="font-size:0.63rem;color:var(--text-3)">completed</span>
+          </div>
+          <div class="cmd-stat-row">
+            <span class="cmd-stat-key" style="color:#c084fc">◈ Metric</span>
+            <span class="cmd-stat-val" style="font-size:0.63rem;color:var(--text-3)">live update</span>
+          </div>
+        </div>
+        <div class="cmd-info-card">
+          <div class="cmd-info-title">Test Events</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="log-btn-ghost" style="font-size:0.7rem;min-height:36px" onclick="testTelegramIn()">Simulate Telegram In</button>
+            <button class="log-btn-ghost" style="font-size:0.7rem;min-height:36px" onclick="testTelegramOut()">Simulate Telegram Out</button>
+            <button class="log-btn-ghost" style="font-size:0.7rem;min-height:36px" onclick="testAgentRun()">Simulate Agent Run</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Memory modal -->
+  <div class="modal-overlay" id="memModal" onclick="closeMemoryModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-hd">
+        <div class="modal-title" id="modalTitle">New Memory</div>
+        <button class="modal-close" onclick="closeMemoryModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input class="log-input" id="memName" type="text" placeholder="Name (e.g. kiro_rollout_context)" style="margin-bottom:10px;width:100%">
+        <select class="log-input" id="memType" style="cursor:pointer;width:100%;margin-bottom:10px">
+          <option value="user">User — who Josh is, preferences</option>
+          <option value="feedback">Feedback — how to work with Josh</option>
+          <option value="project">Project — ongoing work context</option>
+          <option value="reference">Reference — where to find things</option>
+        </select>
+        <input class="log-input" id="memDesc" type="text" placeholder="One-line description (shown in index)" style="margin-bottom:10px;width:100%">
+        <textarea class="log-input" id="memBody" rows="6" placeholder="Memory content..." style="width:100%;resize:vertical;font-family:inherit"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="closeMemoryModal()">Cancel</button>
+        <button class="log-btn" onclick="saveMemory()">Save Memory</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav">
+  <button class="mn-item active" data-page="today" onclick="nav('today',this)"><span class="mn-icon mn-i1"></span>Today</button>
+  <button class="mn-item" data-page="command" onclick="nav('command',this)"><span class="mn-icon mn-i8"></span>Command</button>
+  <button class="mn-item" data-page="charts" onclick="nav('charts',this)"><span class="mn-icon mn-i7"></span>Charts</button>
+  <button class="mn-item" data-page="log" onclick="nav('log',this)"><span class="mn-icon mn-i4"></span>Log</button>
+  <button class="mn-item" data-page="agents" onclick="nav('agents',this)"><span class="mn-icon mn-i2"></span>Agents</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let allAgents = [], activeFilter = 'all', todayData = {};
+
+// ── Clock ──────────────────────────────────────────────────────────────────
+const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function tick() {
+  const now = new Date();
+  const h   = now.getHours(), m = now.getMinutes();
+  const ap  = h >= 12 ? 'PM' : 'AM';
+  const h12 = (h % 12) || 12;
+  const time = `${h12}:${String(m).padStart(2,'0')} ${ap}`;
+  const date = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+  const full = `${date} ${now.getFullYear()}`;
+
+  document.getElementById('tbClock').textContent  = time;
+  document.getElementById('sbClock').textContent  = time;
+  document.getElementById('todayDateFull').textContent = full;
+  document.getElementById('tbDate').textContent   = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('todayGreeting').textContent = `${greet}, Josh.`;
+}
+setInterval(tick, 1000); tick();
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function nav(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item[data-page], .mn-item[data-page]').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(b => b.classList.add('active'));
+  if (page === 'memory') loadMemory();
+  if (page === 'audit')  loadAudit();
+  if (page === 'charts') loadCharts();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, ms=3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ── Agent grid ─────────────────────────────────────────────────────────────
+function badgeHtml(a) {
+  if (a.status === 'pending') return '<span class="card-badge b-pending">Pending</span>';
+  if (a.status === 'cloud')   return '<span class="card-badge b-cloud">Cloud</span>';
+  return '<span class="card-badge b-local">Local</span>';
+}
+
+function cardHtml(a) {
+  const disabled = a.status === 'pending';
+  const openBtn  = a.link ? `<a class="btn-open" href="${a.link}" target="_blank">Open</a>` : '';
+  return `
+  <div class="agent-card" id="card-${a.id}">
+    <div class="shimmer-bar"></div>
+    <div class="card-top">
+      <div class="card-mono">${a.abbr || a.id.slice(0,2).toUpperCase()}</div>
+      ${badgeHtml(a)}
+    </div>
+    <div class="card-name">${a.name}</div>
+    <div class="card-desc">${a.desc || ''}</div>
+    <div class="card-sched">${a.schedule}</div>
+    <div class="card-actions">
+      <button class="btn-run" id="run-${a.id}" ${disabled ? 'disabled title="Needs setup"' : ''} onclick="runAgent('${a.id}')">
+        ${disabled ? 'Pending Setup' : 'Run Now'}
+      </button>
+      ${openBtn}
+    </div>
+  </div>`;
+}
+
+function renderAgents() {
+  const filtered = activeFilter === 'all' ? allAgents : allAgents.filter(a => a.category === activeFilter);
+  const groups = { life: [], work: [], income: [] };
+  filtered.forEach(a => { if (groups[a.category]) groups[a.category].push(a); });
+  const labels = { life: 'Life', work: 'Work', income: 'Income' };
+  let html = '';
+  for (const [cat, items] of Object.entries(groups)) {
+    if (!items.length) continue;
+    if (activeFilter === 'all') html += `<div class="sec-label">${labels[cat]}</div>`;
+    html += items.map(cardHtml).join('');
+  }
+  document.getElementById('agentsGrid').innerHTML = html || '<div class="empty-state">No agents in this category.</div>';
+}
+
+function filterAgents(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAgents();
+}
+
+// ── Run agent ──────────────────────────────────────────────────────────────
+function runAgent(id) {
+  const btn  = document.getElementById('run-' + id);
+  const card = document.getElementById('card-' + id);
+  if (btn)  { btn.classList.add('running'); btn.textContent = 'Running...'; btn.disabled = true; }
+  if (card) card.classList.add('running');
+
+  fetch(`/api/run/${id}`, {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      if (d.link) window.open(d.link, '_blank');
+      toast(d.ok ? `${allAgents.find(a=>a.id===id)?.name || id} triggered` : (d.error || 'Error'));
+    })
+    .catch(() => toast('Server unreachable'))
+    .finally(() => setTimeout(() => {
+      if (btn)  { btn.classList.remove('running'); btn.textContent = 'Run Now'; btn.disabled = false; }
+      if (card) card.classList.remove('running');
+    }, 2400));
+}
+
+function runAgentById(id) { runAgent(id); }
+
+// ── Quick actions from Today ───────────────────────────────────────────────
+function quickFocus() {
+  const min  = prompt('Focus session — how many minutes?', '25');
+  const goal = min ? prompt('What are you working on?', 'Deep work') : null;
+  if (min && goal) {
+    fetch('/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
+      .then(() => { toast(`Focus: ${min}min logged`); loadToday(); });
+  }
+}
+
+function quickWin() {
+  nav('log', document.querySelector('[data-page=log]'));
+  setTimeout(() => {
+    document.getElementById('winDesc')?.scrollIntoView({behavior:'smooth', block:'center'});
+    document.getElementById('winDesc')?.focus();
+  }, 200);
+}
+
+function quickHabit() {
+  nav('log', document.querySelector('[data-page=log]'));
+  setTimeout(() => {
+    document.getElementById('hSleep')?.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 200);
+}
+
+// ── Log functions ──────────────────────────────────────────────────────────
+function logWorkout() {
+  const sets = document.getElementById('wSets').value;
+  const reps = document.getElementById('wReps').value;
+  const sess = document.getElementById('wSess').value;
+  if (!sets || !reps) { toast('Enter sets and reps'); return; }
+  fetch('/api/log/workout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sets, reps, session:sess})})
+    .then(() => { toast(`Push-ups logged: ${sets}x${reps}`); loadToday(); });
+}
+
+function logExpense() {
+  const amt  = document.getElementById('eAmt').value.trim();
+  const note = document.getElementById('eNote').value.trim();
+  if (!amt || !note) { toast('Enter amount and description'); return; }
+  fetch('/api/log/expense', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:amt, note})})
+    .then(() => { toast(`$${amt} logged`); document.getElementById('eAmt').value=''; document.getElementById('eNote').value=''; });
+}
+
+function logFocus() {
+  const min  = document.getElementById('fMin').value;
+  const goal = document.getElementById('fGoal').value.trim();
+  if (!min || !goal) { toast('Enter duration and goal'); return; }
+  fetch('/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
+    .then(() => { toast(`Focus: ${min}min logged`); document.getElementById('fGoal').value=''; loadToday(); });
+}
+
+function logHabit() {
+  const sleep   = document.getElementById('hSleep').value || 7;
+  const water   = document.getElementById('hWater').value || 0;
+  const reading = document.getElementById('hReading').value || 0;
+  const gym     = document.getElementById('hGym').checked;
+  const phone   = document.getElementById('hPhone').checked;
+  fetch('/api/log/habit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sleep_hours:sleep, water_glasses:water, gym, reading_min:reading, no_phone_am:phone})})
+    .then(() => toast('Habit check-in logged'));
+}
+
+function logBody() {
+  const w = document.getElementById('bWeight').value;
+  const m = document.getElementById('bMood').value;
+  const e = document.getElementById('bEnergy').value;
+  if (!w || !m || !e) { toast('Fill in all body fields'); return; }
+  fetch('/api/log/body', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({weight_lbs:w, mood:m, energy:e})})
+    .then(() => { toast(`Body log saved: ${w}lbs`); document.getElementById('bWeight').value=''; document.getElementById('bMood').value=''; document.getElementById('bEnergy').value=''; });
+}
+
+function logWin() {
+  const cat  = document.getElementById('winCat').value;
+  const desc = document.getElementById('winDesc').value.trim();
+  if (!desc) { toast('Describe the win first'); return; }
+  fetch('/api/log/win', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category: cat, description: desc})})
+    .then(() => { toast(`Win logged: ${desc.slice(0,40)}...`); document.getElementById('winDesc').value = ''; });
+}
+
+function logSavings() {
+  const acct = document.getElementById('savAcct').value;
+  const amt  = document.getElementById('savAmt').value;
+  if (!amt) { toast('Enter the new balance'); return; }
+  fetch('/api/log/net_worth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({account: acct, amount: parseFloat(amt)})})
+    .then(() => { toast(`${acct.toUpperCase()} updated to $${parseFloat(amt).toLocaleString()}`); document.getElementById('savAmt').value = ''; });
+}
+
+// ── Data loading ───────────────────────────────────────────────────────────
+function timeAgo(iso) {
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 60) return `${Math.round(s)}s ago`;
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  if (s < 86400) return `${Math.round(s/3600)}h ago`;
+  return `${Math.round(s/86400)}d ago`;
+}
+
+function loadStatus() {
+  fetch('/api/status').then(r=>r.json()).then(d => {
+    allAgents = d.agents;
+    const n = d.active_count;
+    document.getElementById('tbActive').textContent  = n;
+    document.getElementById('sbActive').textContent  = n;
+    document.getElementById('td-agents').textContent = n;
+    document.getElementById('td-streak').textContent = d.workout.streak;
+    renderAgents();
+  }).catch(() => {});
+}
+
+function loadToday() {
+  fetch('/api/today').then(r=>r.json()).then(d => {
+    todayData = d;
+    document.getElementById('td-pushups').textContent = d.pushups_today || 0;
+    document.getElementById('td-focus').textContent   = d.focus_min_today || 0;
+    document.getElementById('td-spent').textContent   = d.spent_today > 0 ? `$${d.spent_today}` : '$0';
+    renderTodayStatus(d);
+    renderAutomations();
+  }).catch(() => {});
+}
+
+function renderTodayStatus(d) {
+  const habit = d.habit_today;
+  const pills = [];
+
+  // Sleep
+  if (habit && habit.sleep_hours) {
+    const h = parseFloat(habit.sleep_hours);
+    const cls = h >= 7 ? 'ok' : 'warn';
+    pills.push(`<div class="status-pill ${cls}"><div class="sp-dot ${cls}"></div>Sleep: ${h}h</div>`);
+  } else {
+    pills.push(`<div class="status-pill none"><div class="sp-dot"></div>Sleep: not logged</div>`);
+  }
+
+  // Gym
+  if (habit) {
+    const gym = habit.gym === 'yes' || habit.gym === true;
+    pills.push(`<div class="status-pill ${gym ? 'ok' : 'none'}"><div class="sp-dot ${gym ? 'ok' : ''}"></div>Gym: ${gym ? 'Done' : 'No'}</div>`);
+  }
+
+  // Water
+  if (habit && habit.water_glasses > 0) {
+    pills.push(`<div class="status-pill ok"><div class="sp-dot ok"></div>Water: ${habit.water_glasses} glasses</div>`);
+  } else {
+    pills.push(`<div class="status-pill none"><div class="sp-dot"></div>Water: not logged</div>`);
+  }
+
+  // Push-ups
+  const pu = d.pushups_today || 0;
+  pills.push(`<div class="status-pill ${pu >= 100 ? 'ok' : pu > 0 ? 'warn' : 'none'}"><div class="sp-dot ${pu >= 100 ? 'ok' : pu > 0 ? 'warn' : ''}"></div>Push-ups: ${pu}</div>`);
+
+  // Focus
+  const fm = d.focus_min_today || 0;
+  if (fm > 0) pills.push(`<div class="status-pill ok"><div class="sp-dot ok"></div>Focus: ${fm}min</div>`);
+
+  const row = document.getElementById('todayStatusRow');
+  if (row) row.innerHTML = pills.join('') || '<div class="status-pill none"><div class="sp-dot"></div>Nothing logged yet</div>';
+}
+
+function renderAutomations() {
+  const now  = new Date();
+  const hhmm = now.getHours() * 60 + now.getMinutes();
+  const dow  = now.getDay(); // 0=Sun,6=Sat
+
+  const items = [
+    { name: 'Morning Brief',  time: '7:00am',   mins: 7*60,     every: 'daily' },
+    { name: 'Daily Learning', time: '9:00am',   mins: 9*60,     every: 'daily' },
+    { name: 'Night Prep',     time: '10:30pm',  mins: 22*60+30, every: 'daily' },
+    { name: 'File Organizer', time: '2:00am',   mins: 2*60,     every: 'daily' },
+    { name: 'Weekly Recap',   time: 'Sun 8pm',  mins: 20*60,    every: 'sunday' },
+  ];
+
+  const html = items.map(a => {
+    const isDaily   = a.every === 'daily';
+    const isSunday  = a.every === 'sunday' && dow === 0;
+    const relevant  = isDaily || isSunday;
+    const past      = relevant && hhmm >= a.mins;
+    const cls       = past ? 'past' : 'future';
+    const dot       = past ? 'cs-done' : 'cs-live';
+    return `<div class="auto-chip ${cls}">
+      <div class="chip-status ${dot}"></div>
+      <span class="chip-name">${a.name}</span>
+      <span class="chip-sched">${a.time}</span>
+    </div>`;
+  }).join('');
+
+  const strip = document.getElementById('automationStrip');
+  if (strip) strip.innerHTML = html;
+}
+
+function loadActivity() {
+  fetch('/api/activity').then(r=>r.json()).then(data => {
+    // Feed
+    const feed = document.getElementById('actFeed');
+    const events = data.events || [];
+    document.getElementById('totalRuns').textContent = data.total_runs || 0;
+    if (events.length) {
+      feed.innerHTML = events.slice(0, 14).map(e => {
+        const cls = e.status === 'success' ? 'ai-ok' : e.status === 'error' ? 'ai-err' : 'ai-run';
+        const scls = e.status === 'success' ? 'as-ok' : e.status === 'error' ? 'as-err' : 'as-run';
+        return `<div class="activity-row">
+          <div class="act-indicator ${cls}"></div>
+          <div class="act-agent">${e.agent_name}</div>
+          <div class="act-summary">${e.summary || '—'}</div>
+          <div class="act-status ${scls}">${e.status}</div>
+          <div class="act-time">${timeAgo(e.timestamp)}</div>
+        </div>`;
+      }).join('');
+    } else {
+      feed.innerHTML = '<div class="empty-state">No agent runs yet. Trigger an agent to start.</div>';
+    }
+    // Perf table
+    const tbody = document.getElementById('perfBody');
+    const stats = data.stats || {};
+    if (Object.keys(stats).length) {
+      tbody.innerHTML = Object.entries(stats)
+        .sort((a,b) => b[1].runs - a[1].runs)
+        .map(([id, s]) => {
+          const rate = s.runs > 0 ? Math.round((s.success/s.runs)*100) : 0;
+          const cls  = rate >= 80 ? 'pr-ok' : 'pr-err';
+          const name = allAgents.find(a=>a.id===id)?.name || id;
+          return `<tr>
+            <td>${name}</td>
+            <td style="color:var(--text-2)">${s.runs}</td>
+            <td style="color:var(--text-2)">${s.avg_ms}ms</td>
+            <td><span class="perf-rate ${cls}">${rate}%</span></td>
+          </tr>`;
+        }).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No performance data yet.</td></tr>';
+    }
+  }).catch(() => {});
+}
+
+// ── Audit ──────────────────────────────────────────────────────────────────
+function loadAudit() {
+  fetch('/api/audit').then(r=>r.json()).then(d => {
+    const cats = ['life','work','income'];
+    let html = '';
+    cats.forEach(cat => {
+      const agents = d.agents.filter(a => a.category === cat);
+      if (!agents.length) return;
+      html += `<div class="log-section-title" style="text-transform:capitalize;margin-bottom:10px">${cat}</div>`;
+      html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">';
+      agents.forEach(a => {
+        const ok   = a.executable;
+        const last = a.last_run ? new Date(a.last_run).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : 'Never run';
+        const ls   = a.last_status;
+        const lsColor = ls === 'success' ? '#4ade80' : ls === 'error' ? '#f87171' : '#94a3b8';
+        html += `<div style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 16px">
+          <span style="font-size:1.1rem">${ok ? '✅' : '❌'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.85rem;font-weight:700">${a.name}</div>
+            <div style="font-size:0.7rem;color:var(--text-3)">${a.schedule}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:0.68rem;color:${lsColor};font-weight:600;text-transform:uppercase">${ls === 'never' ? '—' : ls}</div>
+            <div style="font-size:0.65rem;color:var(--text-3)">${last}</div>
+          </div>
+          ${ok && !a.category === 'income' ? `<button class="mem-btn" onclick="runAgentById('${a.id}')" style="flex-shrink:0">Run</button>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    });
+    document.getElementById('auditGrid').innerHTML = html;
+  });
+}
+
+// ── Memory ─────────────────────────────────────────────────────────────────
+let allMemories = [], memFilter = 'all', editingFile = null;
+
+const TYPE_CLASS = { user:'mt-user', feedback:'mt-feedback', project:'mt-project', reference:'mt-reference' };
+
+function timeAgoMem(iso) {
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  if (s < 86400) return `${Math.round(s/3600)}h ago`;
+  return `${Math.round(s/86400)}d ago`;
+}
+
+function renderMemories() {
+  const filtered = memFilter === 'all' ? allMemories : allMemories.filter(m => m.type === memFilter);
+  const grid = document.getElementById('memGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No memories yet. Add your first one.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(m => `
+    <div class="mem-card">
+      <div class="mem-card-top">
+        <span class="mem-type-badge ${TYPE_CLASS[m.type] || 'mt-user'}">${m.type}</span>
+        <span class="mem-updated">${timeAgoMem(m.updated)}</span>
+      </div>
+      <div class="mem-name">${m.name}</div>
+      <div class="mem-desc">${m.description || '—'}</div>
+      <div class="mem-body">${m.body}</div>
+      <div class="mem-actions">
+        <button class="mem-btn" onclick="editMemory('${m.file}')">Edit</button>
+        <button class="mem-btn del" onclick="deleteMemory('${m.file}', '${m.name}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterMemory(f, btn) {
+  memFilter = f;
+  document.querySelectorAll('#memFilters .ftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderMemories();
+}
+
+function loadMemory() {
+  fetch('/api/memory').then(r=>r.json()).then(d => {
+    allMemories = d.memories || [];
+    renderMemories();
+  }).catch(() => {});
+}
+
+function openMemoryModal(file) {
+  editingFile = file || null;
+  document.getElementById('modalTitle').textContent = file ? 'Edit Memory' : 'New Memory';
+  if (!file) {
+    document.getElementById('memName').value = '';
+    document.getElementById('memType').value = 'user';
+    document.getElementById('memDesc').value = '';
+    document.getElementById('memBody').value = '';
+  }
+  document.getElementById('memModal').classList.add('open');
+}
+
+function closeMemoryModal(e) {
+  if (e && e.target !== document.getElementById('memModal')) return;
+  document.getElementById('memModal').classList.remove('open');
+  editingFile = null;
+}
+
+function editMemory(file) {
+  const m = allMemories.find(x => x.file === file);
+  if (!m) return;
+  editingFile = file;
+  document.getElementById('modalTitle').textContent = 'Edit Memory';
+  document.getElementById('memName').value = m.name;
+  document.getElementById('memType').value = m.type;
+  document.getElementById('memDesc').value = m.description;
+  document.getElementById('memBody').value = m.body;
+  document.getElementById('memModal').classList.add('open');
+}
+
+function saveMemory() {
+  const name = document.getElementById('memName').value.trim();
+  const type = document.getElementById('memType').value;
+  const desc = document.getElementById('memDesc').value.trim();
+  const body = document.getElementById('memBody').value.trim();
+  if (!name || !body) { toast('Name and content required'); return; }
+
+  if (editingFile) {
+    fetch(`/api/memory/${editingFile}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({type, description:desc, body})
+    }).then(() => { toast('Memory updated'); closeMemoryModal(); loadMemory(); });
+  } else {
+    fetch('/api/memory', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, type, description:desc, body})
+    }).then(() => { toast('Memory saved'); closeMemoryModal(); loadMemory(); });
+  }
+}
+
+function deleteMemory(file, name) {
+  if (!confirm(`Delete memory "${name}"?`)) return;
+  fetch(`/api/memory/${file}`, {method:'DELETE'})
+    .then(() => { toast(`Memory deleted: ${name}`); loadMemory(); });
+}
+
+// ── Charts ─────────────────────────────────────────────────────────────────
+function drawBarChart(canvasId, labels, values, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.offsetWidth || 400;
+  const H   = parseInt(canvas.getAttribute('height')) || 140;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {top:10, right:8, bottom:26, left:8};
+  const cW  = W - pad.left - pad.right;
+  const cH  = H - pad.top  - pad.bottom;
+  const max = Math.max(...values, 1);
+  const n   = values.length;
+  const slot = cW / n;
+  const barW = slot * 0.55;
+  const offset = (slot - barW) / 2;
+
+  // faint grid top line
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, pad.top);
+  ctx.lineTo(W - pad.right, pad.top);
+  ctx.stroke();
+
+  values.forEach((v, i) => {
+    const x    = pad.left + i * slot + offset;
+    const barH = Math.max((v / max) * cH, v > 0 ? 3 : 0);
+    const y    = pad.top + cH - barH;
+
+    ctx.fillStyle = v === 0 ? 'rgba(255,255,255,0.06)' : color;
+    const r = Math.min(3, barH / 2);
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, barW, barH || 2, barH > 4 ? [r, r, 0, 0] : 0);
+    } else {
+      ctx.rect(x, y, barW, barH || 2);
+    }
+    ctx.fill();
+
+    if (v > 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = '600 9px Inter,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(v, x + barW / 2, y - 4);
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.font = '500 9px Inter,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x + barW / 2, H - 5);
+  });
+}
+
+function renderSavingsGoals(goals) {
+  const el = document.getElementById('savingsGoals');
+  if (!el) return;
+  el.innerHTML = goals.map(g => {
+    const pct = Math.min(100, g.goal > 0 ? Math.round((g.balance / g.goal) * 100) : 0);
+    const bal  = g.balance ? '$' + g.balance.toLocaleString() : '$0';
+    const goal = '$' + (g.goal / 1000).toFixed(0) + 'K';
+    return `<div class="goal-row">
+      <div class="goal-label"><span class="goal-name">${g.label}</span><span class="goal-pct">${pct}%</span></div>
+      <div class="goal-track"><div class="goal-fill" style="width:${pct}%"></div></div>
+      <div class="goal-sub">${bal} of ${goal} goal</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSavingsSnapshot(goals) {
+  const el = document.getElementById('savingsSnapshot');
+  if (!el) return;
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">' +
+    goals.map(g => {
+      const pct = Math.min(100, g.goal > 0 ? Math.round((g.balance / g.goal) * 100) : 0);
+      const bal  = g.balance ? '$' + g.balance.toLocaleString() : '$0';
+      const goal = '$' + (g.goal / 1000).toFixed(0) + 'K';
+      return `<div>
+        <div style="font-size:1.4rem;font-weight:900;letter-spacing:-0.8px;color:var(--text)">${bal}</div>
+        <div style="font-size:0.68rem;font-weight:600;color:var(--text-2);margin-bottom:8px">${g.label} &nbsp;/&nbsp; ${goal}</div>
+        <div class="goal-track"><div class="goal-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:0.62rem;color:var(--text-3);margin-top:4px">${pct}% funded</div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function loadCharts() {
+  fetch('/api/charts').then(r => r.json()).then(d => {
+    const puL = d.pushup_7d.map(x => x.label);
+    const puV = d.pushup_7d.map(x => x.reps);
+    const arL = d.agent_runs_7d.map(x => x.label);
+    const arV = d.agent_runs_7d.map(x => x.runs);
+
+    requestAnimationFrame(() => {
+      drawBarChart('chartPushups',   puL, puV, 'rgba(74,222,128,0.85)');
+      drawBarChart('chartAgentRuns', arL, arV, 'rgba(147,197,253,0.85)');
+    });
+
+    renderSavingsGoals(d.savings);
+    renderSavingsSnapshot(d.savings);
+
+    const nwEl = document.getElementById('nwTotal');
+    if (nwEl) nwEl.textContent = d.total_nw ? '$' + d.total_nw.toLocaleString() : '$0';
+
+    const bkEl = document.getElementById('nwBreakdown');
+    if (bkEl) bkEl.innerHTML = d.savings.filter(g => g.balance > 0).map(g =>
+      `<div style="display:flex;justify-content:space-between;font-size:0.75rem">
+        <span style="color:var(--text-2)">${g.label}</span>
+        <span style="font-weight:600">$${g.balance.toLocaleString()}</span>
+      </div>`
+    ).join('');
+
+    const upd = document.getElementById('chartsLastUpdate');
+    if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }).catch(() => {});
+}
+
+// ── Command Center / SSE ────────────────────────────────────────────────────
+let _sse             = null;
+let _sseReconnects   = 0;
+let _sseEventCount   = 0;
+let _sseConnectedAt  = null;
+let _sseLastHB       = null;
+const CMD_MAX_ITEMS  = 100;
+
+const CMD_ICONS = {
+  telegram_in:   '📨',
+  telegram_out:  '📤',
+  agent_run:     '⚡',
+  agent_done:    '✓',
+  metric_update: '◈',
+  heartbeat:     '·',
+  connected:     '◎',
+};
+
+function fmtTs(isoOrDate) {
+  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+  if (isNaN(d)) return '—';
+  const h  = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  const h12 = (h % 12) || 12;
+  return `${h12}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ap}`;
+}
+
+function cmdEventText(evt) {
+  switch (evt.type) {
+    case 'telegram_in':    return `Josh: "${evt.text}"`;
+    case 'telegram_out':   return `Arvis: "${evt.text}"`;
+    case 'agent_run':      return `${evt.agent} → ${evt.status || 'running'}`;
+    case 'agent_done': {
+      const icon = evt.status === 'error' ? '✗' : '✓';
+      return `${icon} ${evt.agent} → ${evt.summary || evt.status}`;
+    }
+    case 'metric_update':  return `${evt.key}: ${evt.value}`;
+    case 'heartbeat':      return 'heartbeat';
+    case 'connected':      return 'Stream connected — Arvis OS live';
+    default:               return JSON.stringify(evt);
+  }
+}
+
+function appendCmdEntry(evt) {
+  const feed    = document.getElementById('cmdFeed');
+  if (!feed) return;
+
+  // Auto-scroll only when user is at (or near) bottom
+  const atBottom = (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 60;
+
+  const div = document.createElement('div');
+  div.className = `cmd-entry type-${evt.type}`;
+
+  const ts   = evt.ts ? fmtTs(evt.ts) : fmtTs(new Date());
+  const icon = CMD_ICONS[evt.type] || '·';
+  const text = cmdEventText(evt);
+
+  div.innerHTML =
+    `<span class="cmd-ts">[${ts}]</span>` +
+    `<span class="cmd-icon">${icon}</span>` +
+    `<span class="cmd-text">${escHtml(text)}</span>`;
+
+  feed.appendChild(div);
+
+  // Cap feed at CMD_MAX_ITEMS
+  while (feed.children.length > CMD_MAX_ITEMS) {
+    feed.removeChild(feed.firstChild);
+  }
+
+  if (atBottom) feed.scrollTop = feed.scrollHeight;
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setCmdStatus(connected) {
+  const dot   = document.getElementById('cmdDot');
+  const label = document.getElementById('cmdStatus');
+  const stat  = document.getElementById('cis-status');
+  if (!dot || !label) return;
+  if (connected) {
+    dot.className   = 'cmd-live-dot connected';
+    label.className = 'cmd-live-label';
+    label.textContent = 'LIVE';
+    if (stat) stat.textContent = 'Connected';
+  } else {
+    dot.className   = 'cmd-live-dot offline';
+    label.className = 'cmd-live-label offline';
+    label.textContent = 'OFFLINE';
+    if (stat) stat.textContent = 'Offline';
+  }
+}
+
+function updateCmdMetric(key, value) {
+  const metricMap = {
+    pushups_today:  'cm-pushups-val',
+    focus_min:      'cm-focus-val',
+    streak:         'cm-streak-val',
+    active_count:   'cm-agents-val',
+  };
+  const elId = metricMap[key];
+  if (!elId) return;
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = value;
+  // Flash the card border green briefly
+  const card = el.closest('.cmd-metric');
+  if (card) {
+    card.classList.add('updated');
+    setTimeout(() => card.classList.remove('updated'), 1500);
+  }
+}
+
+function connectSSE() {
+  if (_sse) { _sse.close(); _sse = null; }
+
+  _sse = new EventSource('/api/stream');
+
+  _sse.onopen = () => {
+    setCmdStatus(true);
+    _sseConnectedAt = new Date();
+    const ciEl = document.getElementById('cis-connected');
+    if (ciEl) ciEl.textContent = fmtTs(_sseConnectedAt);
+  };
+
+  _sse.onmessage = (e) => {
+    let evt;
+    try { evt = JSON.parse(e.data); } catch { return; }
+
+    _sseEventCount++;
+    const evEl = document.getElementById('cis-events');
+    if (evEl) evEl.textContent = _sseEventCount;
+    const cmEvEl = document.getElementById('cm-events-val');
+    if (cmEvEl) cmEvEl.textContent = _sseEventCount;
+
+    // Skip heartbeat display if feed already has many items (avoid noise)
+    if (evt.type === 'heartbeat') {
+      _sseLastHB = new Date();
+      const hbEl = document.getElementById('cis-heartbeat');
+      if (hbEl) hbEl.textContent = fmtTs(_sseLastHB);
+      return; // don't add heartbeats to feed
+    }
+
+    appendCmdEntry(evt);
+
+    // Update live metrics strip from metric_update events
+    if (evt.type === 'metric_update') {
+      updateCmdMetric(evt.key, evt.value);
+    }
+    // Sync metrics from today data already loaded
+    if (evt.type === 'connected') {
+      // Seed metrics from todayData if available
+      if (todayData.pushups_today !== undefined) updateCmdMetric('pushups_today', todayData.pushups_today);
+      if (todayData.focus_min_today !== undefined) updateCmdMetric('focus_min', todayData.focus_min_today);
+      if (todayData.streak !== undefined) updateCmdMetric('streak', todayData.streak);
+    }
+  };
+
+  _sse.onerror = () => {
+    setCmdStatus(false);
+    _sse.close();
+    _sse = null;
+    _sseReconnects++;
+    const rcEl = document.getElementById('cis-reconnects');
+    if (rcEl) rcEl.textContent = _sseReconnects;
+    // Reconnect with exponential backoff, max 30s
+    const delay = Math.min(1000 * Math.pow(1.6, Math.min(_sseReconnects, 8)), 30000);
+    appendCmdEntry({ type: 'connected', ts: new Date().toISOString(),
+      _overrideText: `Stream disconnected. Reconnecting in ${Math.round(delay/1000)}s…` });
+    setTimeout(connectSSE, delay);
+  };
+}
+
+// Override text helper — patch cmdEventText for reconnect message
+const _origCmdEventText = cmdEventText;
+function cmdEventText(evt) {
+  if (evt._overrideText) return evt._overrideText;
+  return _origCmdEventText(evt);
+}
+
+function clearCmdFeed() {
+  const feed = document.getElementById('cmdFeed');
+  if (feed) feed.innerHTML = '';
+}
+
+// Test helpers
+function testTelegramIn() {
+  fetch('/api/log/telegram', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({message: 'log 50 pushups', type: 'incoming'})
+  }).then(() => toast('Test event sent'));
+}
+function testTelegramOut() {
+  fetch('/api/log/telegram', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({message: 'Logged. 50 push-ups today.', type: 'outgoing'})
+  }).then(() => toast('Test event sent'));
+}
+function testAgentRun() {
+  fetch('/api/run/focus_session', {method: 'POST'})
+    .then(() => toast('Agent triggered'));
+}
+
+// Extended nav() — replaces the earlier declaration; includes Command Center hooks.
+// JavaScript hoists function declarations so this final version wins at runtime.
+function nav(page, btn) {
+  // Call original nav logic
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item[data-page], .mn-item[data-page]').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(b => b.classList.add('active'));
+  if (page === 'memory') loadMemory();
+  if (page === 'audit')  loadAudit();
+  if (page === 'charts') loadCharts();
+
+  // Command Center extras
+  if (page === 'command') {
+    if (!_sse) connectSSE();
+    // Seed metrics from already-loaded todayData
+    if (todayData.pushups_today !== undefined) {
+      const pEl = document.getElementById('cm-pushups-val');
+      const fEl = document.getElementById('cm-focus-val');
+      const sEl = document.getElementById('cm-streak-val');
+      if (pEl) pEl.textContent = todayData.pushups_today || 0;
+      if (fEl) fEl.textContent = todayData.focus_min_today || 0;
+      if (sEl) sEl.textContent = todayData.streak || 0;
+    }
+    if (allAgents.length) {
+      const aEl = document.getElementById('cm-agents-val');
+      if (aEl) aEl.textContent = allAgents.filter(a => a.status !== 'pending').length;
+    }
+  }
+}
+
+// ── Reminders ──────────────────────────────────────────────────────────────
+function loadReminders() {
+  fetch('/api/reminders').then(r => r.json()).then(d => {
+    const el = document.getElementById('openTasksList');
+    if (!el) return;
+    const items = d.reminders || [];
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-3);font-size:0.78rem;padding:8px 0">No open reminders.</div>';
+      return;
+    }
+    el.innerHTML = items.map(r => {
+      const due = r.due ? `<span style="font-size:0.63rem;color:var(--text-3);margin-left:auto;white-space:nowrap">${r.due.replace(/:\d\d\s(AM|PM)/,'$1').replace(', 2026','')}</span>` : '';
+      const isAgent = /agent|brain|platform|golden|cluster/i.test(r.name);
+      const dot = isAgent ? 'rgba(147,197,253,0.7)' : 'rgba(255,255,255,0.25)';
+      return `<div style="display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:10px 14px;cursor:default" onmouseover="this.style.borderColor='var(--border-hi)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:6px;height:6px;border-radius:50%;background:${dot};flex-shrink:0"></div>
+        <span style="font-size:0.78rem;font-weight:500;color:var(--text);flex:1">${r.name}</span>
+        ${due}
+      </div>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadStatus();
+loadToday();
+loadActivity();
+loadCharts();
+loadReminders();
+// Start SSE immediately so the Command Center feed is always fresh
+connectSSE();
+setInterval(loadStatus, 30000);
+setInterval(loadToday, 15000);
+setInterval(loadActivity, 8000);
+setInterval(loadCharts, 30000);
+setInterval(loadReminders, 900000);
+</script>
+</body>
+</html>

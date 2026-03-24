@@ -1,0 +1,11 @@
+[
+  {
+    "date": "2026-03-24",
+    "timestamp": "2026-03-24T12:14:23.975448",
+    "sleep_hours": 5.0,
+    "water_glasses": 1,
+    "gym": false,
+    "reading_min": 60,
+    "no_phone_am": false
+  }
+]
