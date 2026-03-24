@@ -12,7 +12,8 @@ from flask_cors import CORS
 
 app = Flask(__name__, static_folder=str(Path.home() / "agent-hq"))
 try:
-    CORS(app)
+    CORS(app, origins=["http://localhost:*", "http://192.168.1.178:*",
+                       "https://*.vercel.app", "https://*.trycloudflare.com"])
 except:
     pass
 
@@ -79,6 +80,7 @@ AGENTS = [
     {"id": "golden_paths",    "name": "Golden Paths",      "abbr": "GP", "category": "work",   "schedule": "Weekly",          "status": "local",   "script": "agents/golden_paths.py report", "desc": "Career path agent. Tracks Platform Eng → AI Solutions Eng trajectory, gaps, certs, next actions."},
     {"id": "learning_platform","name": "Learning Platform","abbr": "LP", "category": "work",   "schedule": "Daily",           "status": "local",   "script": "agents/learning_platform.py today", "desc": "Correlates learning resources to AI Solutions Eng job requirements. Builds your personalized roadmap."},
     {"id": "big_brain",       "name": "Big Brain",         "abbr": "BB", "category": "work",   "schedule": "On demand",       "status": "local",   "script": "agents/big_brain.py run", "desc": "Meta-orchestration agent. Knows your goals, coordinates all agents, surfaces priorities and blockers."},
+    {"id": "github_monitor",  "name": "GitHub Monitor",    "abbr": "GH", "category": "work",   "schedule": "On demand",       "status": "local",   "script": "agents/github_monitor.py", "desc": "Monitors arvis-hq for open PRs, CI runs, and recent commits. Reports to Telegram."},
     # INCOME
     {"id": "callbrief",       "name": "CallBrief",        "abbr": "CB", "category": "income", "schedule": "Always on :8767", "status": "local",   "link": "http://192.168.1.178:8767", "desc": "AI call summarizer SaaS. Paste transcript, get structured brief + actions."},
     {"id": "startup_hq",      "name": "Startup HQ",       "abbr": "SH", "category": "income", "schedule": "On demand",       "status": "local",   "link": "http://192.168.1.178:8768", "desc": "Startup pipeline, market research, and decision log. 7 opportunities tracked."},

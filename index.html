@@ -979,6 +979,17 @@
 <div id="toast"></div>
 
 <script>
+// ── API Base URL — empty for local, tunnel URL for remote access ────────────
+const API_BASE = (() => {
+  const h = location.hostname;
+  if (h === 'localhost' || h === '192.168.1.178' || h === '127.0.0.1') return '';
+  const saved = localStorage.getItem('arvis_api_base');
+  if (saved) return saved;
+  const entered = prompt('Enter your Arvis tunnel URL (e.g. https://xyz.trycloudflare.com):\n(This is saved locally and only asked once)', '');
+  if (entered) { localStorage.setItem('arvis_api_base', entered.replace(/\/$/, '')); return entered.replace(/\/$/, ''); }
+  return '';
+})();
+
 // ── State ──────────────────────────────────────────────────────────────────
 let allAgents = [], activeFilter = 'all', todayData = {};
 
@@ -1099,7 +1110,7 @@ function quickFocus() {
   const min  = prompt('Focus session — how many minutes?', '25');
   const goal = min ? prompt('What are you working on?', 'Deep work') : null;
   if (min && goal) {
-    fetch('/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
+    fetch(API_BASE+'/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
       .then(() => { toast(`Focus: ${min}min logged`); loadToday(); });
   }
 }
@@ -1125,7 +1136,7 @@ function logWorkout() {
   const reps = document.getElementById('wReps').value;
   const sess = document.getElementById('wSess').value;
   if (!sets || !reps) { toast('Enter sets and reps'); return; }
-  fetch('/api/log/workout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sets, reps, session:sess})})
+  fetch(API_BASE+'/api/log/workout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sets, reps, session:sess})})
     .then(() => { toast(`Push-ups logged: ${sets}x${reps}`); loadToday(); });
 }
 
@@ -1133,7 +1144,7 @@ function logExpense() {
   const amt  = document.getElementById('eAmt').value.trim();
   const note = document.getElementById('eNote').value.trim();
   if (!amt || !note) { toast('Enter amount and description'); return; }
-  fetch('/api/log/expense', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:amt, note})})
+  fetch(API_BASE+'/api/log/expense', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount:amt, note})})
     .then(() => { toast(`$${amt} logged`); document.getElementById('eAmt').value=''; document.getElementById('eNote').value=''; });
 }
 
@@ -1141,7 +1152,7 @@ function logFocus() {
   const min  = document.getElementById('fMin').value;
   const goal = document.getElementById('fGoal').value.trim();
   if (!min || !goal) { toast('Enter duration and goal'); return; }
-  fetch('/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
+  fetch(API_BASE+'/api/log/focus', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({duration_min:parseInt(min), goal})})
     .then(() => { toast(`Focus: ${min}min logged`); document.getElementById('fGoal').value=''; loadToday(); });
 }
 
@@ -1151,7 +1162,7 @@ function logHabit() {
   const reading = document.getElementById('hReading').value || 0;
   const gym     = document.getElementById('hGym').checked;
   const phone   = document.getElementById('hPhone').checked;
-  fetch('/api/log/habit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sleep_hours:sleep, water_glasses:water, gym, reading_min:reading, no_phone_am:phone})})
+  fetch(API_BASE+'/api/log/habit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sleep_hours:sleep, water_glasses:water, gym, reading_min:reading, no_phone_am:phone})})
     .then(() => toast('Habit check-in logged'));
 }
 
@@ -1160,7 +1171,7 @@ function logBody() {
   const m = document.getElementById('bMood').value;
   const e = document.getElementById('bEnergy').value;
   if (!w || !m || !e) { toast('Fill in all body fields'); return; }
-  fetch('/api/log/body', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({weight_lbs:w, mood:m, energy:e})})
+  fetch(API_BASE+'/api/log/body', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({weight_lbs:w, mood:m, energy:e})})
     .then(() => { toast(`Body log saved: ${w}lbs`); document.getElementById('bWeight').value=''; document.getElementById('bMood').value=''; document.getElementById('bEnergy').value=''; });
 }
 
@@ -1168,7 +1179,7 @@ function logWin() {
   const cat  = document.getElementById('winCat').value;
   const desc = document.getElementById('winDesc').value.trim();
   if (!desc) { toast('Describe the win first'); return; }
-  fetch('/api/log/win', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category: cat, description: desc})})
+  fetch(API_BASE+'/api/log/win', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category: cat, description: desc})})
     .then(() => { toast(`Win logged: ${desc.slice(0,40)}...`); document.getElementById('winDesc').value = ''; });
 }
 
@@ -1176,7 +1187,7 @@ function logSavings() {
   const acct = document.getElementById('savAcct').value;
   const amt  = document.getElementById('savAmt').value;
   if (!amt) { toast('Enter the new balance'); return; }
-  fetch('/api/log/net_worth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({account: acct, amount: parseFloat(amt)})})
+  fetch(API_BASE+'/api/log/net_worth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({account: acct, amount: parseFloat(amt)})})
     .then(() => { toast(`${acct.toUpperCase()} updated to $${parseFloat(amt).toLocaleString()}`); document.getElementById('savAmt').value = ''; });
 }
 
@@ -1190,7 +1201,7 @@ function timeAgo(iso) {
 }
 
 function loadStatus() {
-  fetch('/api/status').then(r=>r.json()).then(d => {
+  fetch(API_BASE+'/api/status').then(r=>r.json()).then(d => {
     allAgents = d.agents;
     const n = d.active_count;
     document.getElementById('tbActive').textContent  = n;
@@ -1202,7 +1213,7 @@ function loadStatus() {
 }
 
 function loadToday() {
-  fetch('/api/today').then(r=>r.json()).then(d => {
+  fetch(API_BASE+'/api/today').then(r=>r.json()).then(d => {
     todayData = d;
     document.getElementById('td-pushups').textContent = d.pushups_today || 0;
     document.getElementById('td-focus').textContent   = d.focus_min_today || 0;
@@ -1282,7 +1293,7 @@ function renderAutomations() {
 }
 
 function loadActivity() {
-  fetch('/api/activity').then(r=>r.json()).then(data => {
+  fetch(API_BASE+'/api/activity').then(r=>r.json()).then(data => {
     // Feed
     const feed = document.getElementById('actFeed');
     const events = data.events || [];
@@ -1327,7 +1338,7 @@ function loadActivity() {
 
 // ── Audit ──────────────────────────────────────────────────────────────────
 function loadAudit() {
-  fetch('/api/audit').then(r=>r.json()).then(d => {
+  fetch(API_BASE+'/api/audit').then(r=>r.json()).then(d => {
     const cats = ['life','work','income'];
     let html = '';
     cats.forEach(cat => {
@@ -1404,7 +1415,7 @@ function filterMemory(f, btn) {
 }
 
 function loadMemory() {
-  fetch('/api/memory').then(r=>r.json()).then(d => {
+  fetch(API_BASE+'/api/memory').then(r=>r.json()).then(d => {
     allMemories = d.memories || [];
     renderMemories();
   }).catch(() => {});
@@ -1454,7 +1465,7 @@ function saveMemory() {
       body: JSON.stringify({type, description:desc, body})
     }).then(() => { toast('Memory updated'); closeMemoryModal(); loadMemory(); });
   } else {
-    fetch('/api/memory', {
+    fetch(API_BASE+'/api/memory', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({name, type, description:desc, body})
@@ -1562,7 +1573,7 @@ function renderSavingsSnapshot(goals) {
 }
 
 function loadCharts() {
-  fetch('/api/charts').then(r => r.json()).then(d => {
+  fetch(API_BASE+'/api/charts').then(r => r.json()).then(d => {
     const puL = d.pushup_7d.map(x => x.label);
     const puV = d.pushup_7d.map(x => x.reps);
     const arL = d.agent_runs_7d.map(x => x.label);
@@ -1713,7 +1724,7 @@ function updateCmdMetric(key, value) {
 function connectSSE() {
   if (_sse) { _sse.close(); _sse = null; }
 
-  _sse = new EventSource('/api/stream');
+  _sse = new EventSource(API_BASE+'/api/stream');
 
   _sse.onopen = () => {
     setCmdStatus(true);
@@ -1784,21 +1795,21 @@ function clearCmdFeed() {
 
 // Test helpers
 function testTelegramIn() {
-  fetch('/api/log/telegram', {
+  fetch(API_BASE+'/api/log/telegram', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({message: 'log 50 pushups', type: 'incoming'})
   }).then(() => toast('Test event sent'));
 }
 function testTelegramOut() {
-  fetch('/api/log/telegram', {
+  fetch(API_BASE+'/api/log/telegram', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({message: 'Logged. 50 push-ups today.', type: 'outgoing'})
   }).then(() => toast('Test event sent'));
 }
 function testAgentRun() {
-  fetch('/api/run/focus_session', {method: 'POST'})
+  fetch(API_BASE+'/api/run/focus_session', {method: 'POST'})
     .then(() => toast('Agent triggered'));
 }
 
@@ -1835,7 +1846,7 @@ function nav(page, btn) {
 
 // ── Reminders ──────────────────────────────────────────────────────────────
 function loadReminders() {
-  fetch('/api/reminders').then(r => r.json()).then(d => {
+  fetch(API_BASE+'/api/reminders').then(r => r.json()).then(d => {
     const el = document.getElementById('openTasksList');
     if (!el) return;
     const items = d.reminders || [];
