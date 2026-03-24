@@ -667,6 +667,31 @@ def api_charts():
     })
 
 
+@app.route("/api/deploy", methods=["POST"])
+def api_deploy():
+    """git pull + restart — callable from Telegram via Claude Code."""
+    try:
+        result = subprocess.run(
+            ["git", "pull", "origin", "main"],
+            capture_output=True, text=True, cwd=str(BASE), timeout=30
+        )
+        output = (result.stdout + result.stderr).strip()
+        already_latest = "Already up to date" in output
+
+        broadcast_event("agent_run", {"agent": "deploy", "message": f"Deploy: {output[:120]}"})
+
+        if not already_latest:
+            # Restart server in background thread after response is sent
+            def _restart():
+                time.sleep(1.5)
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            threading.Thread(target=_restart, daemon=True).start()
+
+        return jsonify({"ok": True, "output": output, "restarting": not already_latest})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 if __name__ == "__main__":
-    print("🤖 Agent HQ starting on http://0.0.0.0:8766")
+    print("Agent HQ starting on http://0.0.0.0:8766")
     app.run(host="0.0.0.0", port=8766, debug=False)
